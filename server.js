@@ -48,9 +48,9 @@ app.post('/login', async (req, res) => {
 
         const key = crypto.randomBytes(16).toString('hex');
 
-        query = "INSERT INTO sessions(UserID, AuthKey) VALUES(?, ?)";
+        query = "INSERT INTO sessions(user_id, auth_key) VALUES(?, ?)";
 
-        const userID = result[0][0].ID;
+        const userID = result[0][0].id;
         result = await connection.execute(query, [userID, key]);
 
         const authKey = {
