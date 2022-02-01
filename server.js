@@ -71,13 +71,13 @@ app.post('/login', async (req, res) => {
 app.post('/todos', async (req, res) => {
 
     try {
-        if(!req.body.authKey) {
+        if(!req.get("Authorization")) {
             return res.status(400).json({
                 message: "Missing authentication key"
             })
         }
 
-        const userKey = req.body.authKey;
+        const userKey = req.get("Authorization");
 
         let getTodosQuery = "SELECT id, content, status FROM todos INNER JOIN sessions ON todos.user_id =  sessions.user_id WHERE sessions.auth_key = ?";
         let todosResult = await connection.execute(getTodosQuery, [userKey]);
