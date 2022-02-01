@@ -87,6 +87,13 @@ app.post('/todos', async (req, res) => {
                 message: "There are no todos to display"
             })
         }
+    
+        todosResult[0].forEach(element => {
+            if(element.status == 1)
+                element.status = true;
+            else
+                element.status = false;
+        });
 
         res.json(todosResult[0]);
 
