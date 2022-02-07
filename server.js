@@ -3,6 +3,7 @@ const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const config = require('./config');
+const { isSet } = require('util/types');
 
 let connection;
 
@@ -25,7 +26,9 @@ app.use(bodyParser.json());
 app.post('/update', async (req,res) => {
     try {
 
-        if (!(req.body.id && req.body.status)) {
+        console.log(req.body);
+
+        if (!req.body.id || isSet(req.body.status)) {
             return res.status(400).json({
                 message: "Missing variables"
             })
