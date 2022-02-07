@@ -22,6 +22,29 @@ mysql.createConnection({
 const app = express();
 app.use(bodyParser.json());
 
+app.post('/update', async (req,res) => {
+    try {
+
+        if (!(req.body.id && req.body.status)) {
+            return res.status(400).json({
+                message: "Missing variables"
+            })
+        }
+
+        const id = req.body.id;
+        const newStatus = req.body.status;
+
+        updateQuery = "UPDATE todos SET status = ? WHERE id=?";
+        let updateResult = await connection.execute(updateQuery, [newStatus, id]);
+         res.json( {
+            updated: updateResult[0].affectedRows
+         });
+
+    } catch(err) {
+
+    }
+})
+
 app.post('/login', async (req, res) => {
 
     try {
