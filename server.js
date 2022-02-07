@@ -26,8 +26,6 @@ app.use(bodyParser.json());
 app.post('/update', async (req,res) => {
     try {
 
-        console.log(req.body);
-
         if (!req.body.id || isSet(req.body.status)) {
             return res.status(400).json({
                 message: "Missing variables"
@@ -39,9 +37,17 @@ app.post('/update', async (req,res) => {
 
         updateQuery = "UPDATE todos SET status = ? WHERE id=?";
         let updateResult = await connection.execute(updateQuery, [newStatus, id]);
-         res.json( {
-            updated: updateResult[0].affectedRows
-         });
+
+        if(updateResult[0].affectedRows == 1) {
+            res.json( {
+                message: "Status has been updated"
+             });
+        } else {
+            res.json( {
+                message: "Updating status error"
+             });
+        }
+         
 
     } catch(err) {
         console.error(err.message);
