@@ -20,8 +20,57 @@ mysql.createConnection({
 });
 
 
+function authorization(req, res, next) {
+
+    if(!req.get("Authorization")) {
+        return res.status(401).json({
+            message: "Missing authentication key"
+        })
+    }
+
+    return next();
+}
+
+
 const app = express();
 app.use(bodyParser.json());
+
+app.post('/add',[authorization], async (req, res) => {
+
+    try {
+
+        if(isSet(req.body.id) || !req.body.content || isSet(req.body.status)) {
+            return res.status(400).json({
+                message: "Missing variables"
+            })
+        }
+        
+        const newTodoAuthKey = req.get("Authorization");
+        const newTodoContent = req.body.content;
+        const newTodoStatus = 0;
+        let newTodoUSerId = await connection.execute("SELECT user_id FROM sessions WHERE auth_key = ?", [newTodoAuthKey])
+
+        const newTodoQuery = "INSERT INTO todos (user_id, content, status) VALUES (?,?,?)";
+        let result = await connection.execute(newTodoQuery, [newTodoUSerId, newTodoContent, newTodoStatus]);
+
+        const newTodoId = result[0].insertId;
+
+        res.json({
+            id: newTodoId,
+            content: newTodoContent,
+            status: newTodoStatus
+        })
+
+
+        
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({
+            message: "Server error"
+        })
+    }
+})
+
 
 app.post('/update', async (req,res) => {
     try {
@@ -103,14 +152,9 @@ app.post('/login', async (req, res) => {
 
 })
 
-app.post('/todos', async (req, res) => {
+app.post('/todos',[authorization], async (req, res) => {
 
     try {
-        if(!req.get("Authorization")) {
-            return res.status(400).json({
-                message: "Missing authentication key"
-            })
-        }
 
         const userKey = req.get("Authorization");
 
