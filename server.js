@@ -44,14 +44,15 @@ app.post('/add',[authorization], async (req, res) => {
                 message: "Missing variables"
             })
         }
-        
+
         const newTodoAuthKey = req.get("Authorization");
         const newTodoContent = req.body.content;
-        const newTodoStatus = 0;
-        let newTodoUSerId = await connection.execute("SELECT user_id FROM sessions WHERE auth_key = ?", [newTodoAuthKey])
+        const newTodoStatus = false;
+        let newTodoUserId = await connection.execute("SELECT user_id FROM sessions WHERE auth_key = ?", [newTodoAuthKey])
+        newTodoUserId = newTodoUserId[0][0].user_id;
 
         const newTodoQuery = "INSERT INTO todos (user_id, content, status) VALUES (?,?,?)";
-        let result = await connection.execute(newTodoQuery, [newTodoUSerId, newTodoContent, newTodoStatus]);
+        let result = await connection.execute(newTodoQuery, [newTodoUserId, newTodoContent, newTodoStatus]);
 
         const newTodoId = result[0].insertId;
 
