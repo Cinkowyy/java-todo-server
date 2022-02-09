@@ -73,7 +73,7 @@ app.post('/add',[authorization], async (req, res) => {
 })
 
 
-app.post('/update', async (req,res) => {
+app.post('/update',[authorization], async (req,res) => {
     try {
 
         if (!req.body.id || isSet(req.body.status)) {
