@@ -35,11 +35,37 @@ function authorization(req, res, next) {
 const app = express();
 app.use(bodyParser.json());
 
-app.post('/delete',[authorization], async (req, res) => {
+
+app.post('/clear',[authorization], async (req, res) => {
+
+    const userKey = req.get("Authorization");
     
     try {
 
-        console.log(req.body.id);
+        let deleteRes = await connection.execute("DELETE FROM todos WHERE status=1 AND user_id IN (SELECT user_id FROM sessions WHERE auth_key = ?)", [userKey]);
+
+        if(deleteRes[0].affectedRows < 1) {
+            res.status(400).json( {
+                message: "No todos to delete"
+             });
+        } else {
+            res.json({
+                message: "Completed todos has been cleared"
+            })
+        }
+        
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({
+            message: "Server error"
+        })
+    }
+})
+
+
+app.post('/delete',[authorization], async (req, res) => {
+    
+    try {
 
         if(!req.body.id) {
             return res.status(400).json({
@@ -49,15 +75,17 @@ app.post('/delete',[authorization], async (req, res) => {
 
         const todoId = req.body.id;
 
+
         let deleteRes = await connection.execute("DELETE FROM todos where id = ?", [todoId]);
         
-        if(deleteRes[0].affectedRows == 1) {
-            res.json( {
-                message: "Todo has been deleted"
-             });
-        } else {
+        if(deleteRes[0].affectedRows < 1) {
             res.status(400).json( {
                 message: "Deleting error"
+             });
+            
+        } else {
+            res.json( {
+                message: "Todo has been deleted"
              });
         }
         
