@@ -35,6 +35,40 @@ function authorization(req, res, next) {
 const app = express();
 app.use(bodyParser.json());
 
+app.post('/delete',[authorization], async (req, res) => {
+    
+    try {
+
+        console.log(req.body.id);
+
+        if(!req.body.id) {
+            return res.status(400).json({
+                message: "Missing variables"
+            })
+        }
+
+        const todoId = req.body.id;
+
+        let deleteRes = await connection.execute("DELETE FROM todos where id = ?", [todoId]);
+        
+        if(deleteRes[0].affectedRows == 1) {
+            res.json( {
+                message: "Todo has been deleted"
+             });
+        } else {
+            res.status(400).json( {
+                message: "Deleting error"
+             });
+        }
+        
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({
+            message: "Server error"
+        })
+    }
+})
+
 app.post('/add',[authorization], async (req, res) => {
 
     try {
@@ -51,8 +85,7 @@ app.post('/add',[authorization], async (req, res) => {
         let newTodoUserId = await connection.execute("SELECT user_id FROM sessions WHERE auth_key = ?", [newTodoAuthKey])
         newTodoUserId = newTodoUserId[0][0].user_id;
 
-        const newTodoQuery = "INSERT INTO todos (user_id, content, status) VALUES (?,?,?)";
-        let result = await connection.execute(newTodoQuery, [newTodoUserId, newTodoContent, newTodoStatus]);
+        let result = await connection.execute("INSERT INTO todos (user_id, content, status) VALUES (?,?,?)", [newTodoUserId, newTodoContent, newTodoStatus]);
 
         const newTodoId = result[0].insertId;
 
@@ -85,15 +118,14 @@ app.post('/update',[authorization], async (req,res) => {
         const id = req.body.id;
         const newStatus = req.body.status;
 
-        updateQuery = "UPDATE todos SET status = ? WHERE id=?";
-        let updateResult = await connection.execute(updateQuery, [newStatus, id]);
+        let updateResult = await connection.execute("UPDATE todos SET status = ? WHERE id=?", [newStatus, id]);
 
         if(updateResult[0].affectedRows == 1) {
             res.json( {
                 message: "Status has been updated"
              });
         } else {
-            res.json( {
+            res.status(400).json( {
                 message: "Updating status error"
              });
         }
@@ -122,8 +154,7 @@ app.post('/login', async (req, res) => {
 
         const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
 
-        let query = "SELECT * FROM users WHERE login=? AND password=? LIMIT 1";
-        let result = await connection.execute(query, [login, hashedPassword]);
+        let result = await connection.execute("SELECT * FROM users WHERE login=? AND password=? LIMIT 1", [login, hashedPassword]);
 
         if (result[0].length == 0) {
             return res.status(401).json({
@@ -133,10 +164,9 @@ app.post('/login', async (req, res) => {
 
         const key = crypto.randomBytes(16).toString('hex');
 
-        query = "INSERT INTO sessions(user_id, auth_key) VALUES(?, ?)";
 
         const userID = result[0][0].id;
-        result = await connection.execute(query, [userID, key]);
+        result = await connection.execute("INSERT INTO sessions(user_id, auth_key) VALUES(?, ?)", [userID, key]);
 
         const authKey = {
             authKey: key
@@ -159,8 +189,7 @@ app.post('/todos',[authorization], async (req, res) => {
 
         const userKey = req.get("Authorization");
 
-        let getTodosQuery = "SELECT id, content, status FROM todos INNER JOIN sessions ON todos.user_id =  sessions.user_id WHERE sessions.auth_key = ?";
-        let todosResult = await connection.execute(getTodosQuery, [userKey]);
+        let todosResult = await connection.execute("SELECT id, content, status FROM todos INNER JOIN sessions ON todos.user_id =  sessions.user_id WHERE sessions.auth_key = ?", [userKey]);
 
         if (todosResult[0].length == 0) {
             return res.status(401).json({
