@@ -1,7 +1,8 @@
 # Java Todo App Server
-> Node.js server for todo app created in JavaFX
+> Simple Node.js server for JavaFX todo app
 
 ## General Information
+The server validates users and gives them a unique authorization key, which is stored in the database in a session table. <br/> The server's main responsibility is managing user tasks: adding new ones, changing their status, and deleting a single item or all the ones executed.  
 
 ## Technologies Used
 - Node.js - 17.4.0
